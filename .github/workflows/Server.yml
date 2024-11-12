@@ -1,0 +1,42 @@
+name: Deploy to WHM Server
+
+on:
+  push:
+    branches:
+      - main  # Atau branch yang sesuai untuk deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up SSH
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      # Connect to the server and run commands
+      - name: Deploy to WHM server
+        run: |
+          echo "Deploying to server at IP: ${{ secrets.SERVER_IP }} using user: ${{ secrets.SSH_USER }}"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Log IP, Username, and Password (only for logging purposes, don't use plain text passwords!)
+            echo "Deploying on $(date)" >> ~/deployment.log
+            echo "Server IP: ${{ secrets.SERVER_IP }}" >> ~/deployment.log
+            echo "Username: ${{ secrets.SSH_USER }}" >> ~/deployment.log
+            # If you need to use a password (not recommended), make sure it's also stored as a secret
+            echo "Password: ${{ secrets.SSH_PASSWORD }}" >> ~/deployment.log
+
+            # Command untuk deploy atau konfigurasi server
+            # Misalnya, deploy website atau aplikasi
+            cd /var/www/html
+            git pull origin main
+            # Atau perintah lain untuk menyesuaikan aplikasi yang akan dideploy
+          EOF

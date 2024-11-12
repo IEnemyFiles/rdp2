@@ -1,0 +1,43 @@
+name: RDP
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install XFCE and XRDP
+        run: |
+          # Update and install packages
+          sudo apt update
+          sudo apt install -y xfce4 xfce4-goodies xrdp
+          
+          # Enable and start XRDP
+          sudo systemctl enable xrdp --now
+          
+          # Set session to XFCE
+          echo "xfce4-session" >~/.xsession
+          
+          # Open port 3389 for RDP
+          sudo ufw allow 3389
+          
+          # Set root password to 'CobaDulu987@'
+          echo "root:CobaDulu987@" | sudo chpasswd
+          
+          # Log IP address, username, and password
+          IP_ADDRESS=$(hostname -I | awk '{print $1}')
+          USERNAME="root"
+          PASSWORD="CobaDulu987@"
+
+          echo "RDP setup complete!"
+          echo "IP Address: $IP_ADDRESS"
+          echo "Username: $USERNAME"
+          echo "Password: $PASSWORD"
+
+          # Allow root login for XRDP
+          sudo sed -i 's/^#AllowRoot/AllowRoot/' /etc/xrdp/xrdp.ini
+          
+          # Restart XRDP service to apply changes
+          sudo service xrdp restart
+          
+      - name: Keep the connection alive for 72 Hours
+        run: sleep 259200   # 72 Hours in seconds
